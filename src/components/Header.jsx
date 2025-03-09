@@ -43,10 +43,17 @@ const Header = () => {
         Unleash your creativity with AI. Turn your imagination into visual art in seconds—just type, and watch the magic happen.
       </motion.p>
 
-      {/* Button */}
+      {/* Aesthetic Button */}
       <motion.button
         variants={fadeUp}
-        className="sm:text-lg text-white bg-black w-auto mt-8 px-12 py-2.5 flex items-center gap-2 rounded-full mx-auto"
+        whileHover={{
+          scale: 1.1,
+          backgroundColor: "rgba(0, 0, 0, 0.9)",
+          boxShadow: "0px 0px 15px rgba(59, 130, 246, 0.7)", // Blue glow effect
+        }}
+        whileTap={{ scale: 0.95 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="sm:text-lg text-white bg-black w-auto mt-8 px-12 py-2.5 flex items-center gap-2 rounded-full mx-auto transition-all"
       >
         Generate Images
         <img className="h-6" src={assets.star_group} alt="" />
