@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useContext } from "react";
 import { assets } from "../assets/assets";
 import { motion } from "framer-motion";
+import { AppContext } from "../context/AppContext";
+import { useNavigate } from "react-router-dom";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
@@ -14,6 +16,17 @@ const staggerContainer = {
 };
 
 const Header = () => {
+
+  const{user,setShowLogin}=useContext(AppContext)
+  const navigate = useNavigate();
+  const onClickHandler = () => {
+       if (user) {
+      navigate("/result");
+       }else{
+      setShowLogin(true);
+       }
+  }
+    
   return (
     <motion.div
       initial="hidden"
@@ -44,7 +57,7 @@ const Header = () => {
       </motion.p>
 
       {/* Aesthetic Button */}
-      <motion.button
+      <motion.button onClick={onClickHandler}
         variants={fadeUp}
         whileHover={{
           scale: 1.1,

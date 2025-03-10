@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 
 const Navbar = () => {
-  const { user } = useContext(AppContext);
+  const { user, setShowLogin} = useContext(AppContext);
   const navigate = useNavigate();
 
   return (
@@ -50,7 +50,7 @@ const Navbar = () => {
             </p>
 
             {/* Login Button with Hover Effect */}
-            <button
+            <button onClick={() => setShowLogin(true)}
               className="bg-zinc-800 text-white px-7 py-2 sm:px-7 text-sm rounded-full 
               hover:bg-zinc-900 hover:scale-105 hover:shadow-lg transition-all duration-500"
             >
