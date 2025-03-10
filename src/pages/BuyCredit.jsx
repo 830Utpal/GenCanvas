@@ -2,9 +2,63 @@ import React, { useContext, useEffect, useRef } from "react";
 import { assets, plans } from "../assets/assets";
 import { AppContext } from "../context/AppContext";
 import { gsap } from "gsap";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+
+
 
 const BuyCredit = () => {
-  const { user } = useContext(AppContext);
+  
+  const { user,backendUrl,loadCreditsData,token,setShowLogin} = useContext(AppContext);
+  useContext(AppContext);
+
+  const navigate=useNavigate()
+
+  const initPay=async(order)=>{
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: order.amount,
+      currency: order.currency,
+      name: "Credit Payment",
+      description: "Credits Payment",
+      receipt: order.receipt,
+      handler: async(response)=>{
+        try{
+          const {data}=await axios.post(backendUrl+"/api/user/verify-razor",{response,order},{headers:{token}})
+          if(data.success){
+            loadCreditsData()
+            navigate('/')
+            toast.success('credits added successfully')
+          }
+        }catch(error){
+          toast.error(error.message)
+        }
+      }
+    }
+    const rzp= new window.Razorpay(options)
+    rzp.open()
+  }
+
+  const paymentRazorpay=async(planId)=>{
+    try{
+      if(!user){
+        setShowLogin(true)
+      }
+
+     const {data} =await axios.post(backendUrl+"/api/user/pay-razor",{planId},{headers:{token}})
+        
+     if(data.success){
+        initPay(data.order)
+     }
+
+    }catch(error){
+      toast.error(error.message)
+    }
+  }
+
   const containerRef = useRef(null);
   const buttonRef = useRef(null);
 
@@ -71,7 +125,7 @@ const BuyCredit = () => {
           return (
             <div
               key={index}
-              className={`bg-white drop-shadow-lg border rounded-lg py-12 px-8 text-gray-700 
+              className={` bg-white drop-shadow-lg border rounded-lg py-12 px-8 text-gray-700 
               relative overflow-hidden ${planClass} ${hoverEffect} before:absolute 
               before:inset-0 before:border-[3px] before:border-transparent 
               before:animate-rotateBorder`}
@@ -87,7 +141,7 @@ const BuyCredit = () => {
               </p>
 
               {/* Buttons with Modern Styles */}
-              <button
+              <button onClick={()=>paymentRazorpay(item.id)}
                 className={`w-full mt-8 text-sm rounded-md py-3 min-w-52 font-medium 
                 transition-all duration-300 shadow-md ${buttonClass}`}
               >
@@ -101,4 +155,4 @@ const BuyCredit = () => {
   );
 };
 
-export default BuyCredit;
+export default BuyCredit;  
