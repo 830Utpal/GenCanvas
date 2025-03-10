@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useContext } from "react";
 import { assets } from "../assets/assets";
 import { motion } from "framer-motion";
+import { AppContext } from "../context/AppContext";
+import { useNavigate } from "react-router-dom";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
@@ -8,6 +10,20 @@ const fadeUp = {
 };
 
 const GenerateBtn = () => {
+  const { user, setShowLogin, showLogin } = useContext(AppContext); // Get `showLogin`
+  const navigate = useNavigate();
+
+  const onClickHandler = () => {
+    if (user) {
+      navigate("/result");
+    } else {
+      setShowLogin(true);
+    }
+  };
+
+  // **Hide GenerateBtn when login is open**
+  if (showLogin) return null;
+
   return (
     <motion.div
       initial="hidden"
@@ -15,7 +31,6 @@ const GenerateBtn = () => {
       viewport={{ once: true, amount: 0.2 }}
       className="pb-16 text-center"
     >
-      {/* Heading with Animation */}
       <motion.h1
         variants={fadeUp}
         className="text-2xl md:text-3xl lg:text-4xl mt-4 font-semibold text-neutral-800 py-6 md:py-16"
@@ -23,8 +38,8 @@ const GenerateBtn = () => {
         See the magic. Try now
       </motion.h1>
 
-      {/* Button with Animation & Aesthetic Hover Effect */}
       <motion.button
+        onClick={onClickHandler}
         variants={fadeUp}
         whileHover={{
           scale: 1.1,
@@ -38,7 +53,6 @@ const GenerateBtn = () => {
         <span className="relative z-10">Generate Images</span>
         <img src={assets.star_group} alt="" className="h-6 relative z-10" />
 
-        {/* Glow Effect (Doesn't Affect Text) */}
         <span className="absolute inset-0 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-500 bg-gray-800"></span>
       </motion.button>
     </motion.div>
