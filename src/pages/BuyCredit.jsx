@@ -1,158 +1,194 @@
 import React, { useContext, useEffect, useRef } from "react";
 import { assets, plans } from "../assets/assets";
 import { AppContext } from "../context/AppContext";
-import { gsap } from "gsap";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-
-
+gsap.registerPlugin(ScrollTrigger);
 
 const BuyCredit = () => {
-  
-  const { user,backendUrl,loadCreditsData,token,setShowLogin} = useContext(AppContext);
-  useContext(AppContext);
-
-  const navigate=useNavigate()
-
-  const initPay=async(order)=>{
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-      amount: order.amount,
-      currency: order.currency,
-      name: "Credit Payment",
-      description: "Credits Payment",
-      receipt: order.receipt,
-      handler: async(response)=>{
-        try{
-          const {data}=await axios.post(backendUrl+"/api/user/verify-razor",{response,order},{headers:{token}})
-          if(data.success){
-            loadCreditsData()
-            navigate('/')
-            toast.success('credits added successfully')
-          }
-        }catch(error){
-          toast.error(error.message)
-        }
-      }
-    }
-    const rzp= new window.Razorpay(options)
-    rzp.open()
-  }
-
-  const paymentRazorpay=async(planId)=>{
-    try{
-      if(!user){
-        setShowLogin(true)
-      }
-
-     const {data} =await axios.post(backendUrl+"/api/user/pay-razor",{planId},{headers:{token}})
-        
-     if(data.success){
-        initPay(data.order)
-     }
-
-    }catch(error){
-      toast.error(error.message)
-    }
-  }
-
-  const containerRef = useRef(null);
-  const buttonRef = useRef(null);
+  const { user, backendUrl, loadCreditsData, token, setShowLogin } =
+    useContext(AppContext);
+  const navigate = useNavigate();
+  const sectionRef = useRef(null);
+  const cardRefs = useRef([]);
 
   useEffect(() => {
-    gsap.from(containerRef.current, {
-      opacity: 0,
-      y: 50,
-      duration: 1,
-      ease: "power3.out",
+    gsap.fromTo(
+      sectionRef.current,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 1.2, ease: "power3.out" }
+    );
+
+    cardRefs.current.forEach((el, index) => {
+      gsap.fromTo(
+        el,
+        { opacity: 0, scale: 0.9, y: 30 },
+        {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          duration: 1,
+          delay: index * 0.1,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: el,
+            start: "top 90%",
+          },
+        }
+      );
+
+      gsap.to(el, {
+        scale: 1.07,
+        duration: 0.3,
+        ease: "power2.out",
+        paused: true,
+      });
+
+      el.addEventListener("mouseenter", () => gsap.to(el, { scale: 1.07 }));
+      el.addEventListener("mouseleave", () => gsap.to(el, { scale: 1 }));
     });
 
-    gsap.to(buttonRef.current, {
-      borderImageSource: "linear-gradient(120deg, #ff7eb3, #ff758c, #ff7eb3)",
-      borderImageSlice: 1,
+    // **Always Blinking Light Effect for Business Plan**
+    gsap.to(".business-glow", {
+      boxShadow: "0px 0px 30px rgba(255, 215, 0, 1)",
       repeat: -1,
-      duration: 3,
-      ease: "linear",
+      yoyo: true,
+      duration: 1.5,
+      ease: "power2.inOut",
     });
   }, []);
 
   return (
-    <div ref={containerRef} className="min-h-[80vh] text-center pt-14 mb-10">
-      {/* Our Plans Button with Animated Border & Shadow Effect */}
-      <button
-        ref={buttonRef}
-        className=" border-gray-400 px-10 py-2 rounded-full mb-6 text-lg font-medium text-gray-700 
-        relative overflow-hidden before:absolute before:inset-0 before:rounded-full 
-        before:border-[3px] before:border-transparent before:animate-rotateBorder 
-        shadow-md hover:shadow-lg transition-shadow duration-300"
+    <PayPalScriptProvider
+      options={{
+        "client-id": import.meta.env.VITE_PAYPAL_CLIENT_ID || "",
+        currency: "USD",
+      }}
+    >
+      <div
+        ref={sectionRef}
+        className="min-h-[90vh] text-center pt-16 pb-14 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 rounded-xl shadow-lg p-10"
       >
-        Our Plans
-      </button>
+        <button className="border border-gray-400 px-10 py-2 rounded-full mb-8 text-lg font-semibold text-gray-800 shadow-md hover:shadow-lg hover:bg-gray-300 transition-all">
+          Our Plans
+        </button>
 
-      <h1 className="text-center text-4xl font-semibold mb-6 sm:mb-10 text-gray-800">
-        Choose the Plan
-      </h1>
+        <h1 className="text-center text-4xl font-bold mb-10 text-gray-900">
+          Choose the Plan
+        </h1>
 
-      {/* Pricing Plans Section */}
-      <div className="flex flex-wrap justify-center gap-6 text-left">
-        {plans.map((item, index) => {
-          let planClass = "";
-          let hoverEffect = "";
-          let buttonClass = "text-white"; // Default button text color
+        <div className="flex flex-wrap justify-center gap-10 text-left">
+          {plans.map((item, index) => {
+            let borderClass = "border border-gray-300 shadow-md rounded-3xl";
+            let textColor = "text-gray-900";
+            let buttonClass =
+              "text-black bg-gray-300 hover:bg-gray-400 transition-all rounded-lg";
+            let bgGradient =
+              "bg-gradient-to-r from-gray-100 via-gray-200 to-gray-300";
+            let shadowColor = "shadow-gray-400/40";
+            let buttonSize = "py-3";
 
-          if (item.id.includes("Basic")) {
-            planClass = "border-gray-300";
-            hoverEffect = "hover:scale-105";
-            buttonClass = "text-black bg-gray-100 hover:bg-gray-300"; // Basic plan: black text
-          } else if (item.id.includes("Advanced")) {
-            planClass = "border-purple-500 shadow-lg";
-            hoverEffect =
-              "hover:scale-110 hover:shadow-2xl transition-all duration-300";
-            buttonClass =
-              "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-purple-600 hover:to-blue-500";
-          } else if (item.id.includes("Business")) {
-            planClass =
-              "border-yellow-500 bg-gradient-to-br from-yellow-300 to-orange-400 text-black shadow-xl";
-            hoverEffect =
-              "hover:scale-110 hover:shadow-2xl transition-all duration-300 animate-pulse";
-            buttonClass =
-              "bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-orange-600 hover:to-yellow-500 text-white";
-          }
+            if (item.id.includes("Advanced")) {
+              borderClass =
+                "border-2 border-blue-500 shadow-xl rounded-3xl";
+              bgGradient =
+                "bg-gradient-to-br from-blue-700 via-indigo-500 to-blue-400";
+              textColor = "text-white";
+              buttonClass =
+                "bg-blue-500 text-white hover:bg-blue-600 transition-all rounded-lg";
+              shadowColor = "shadow-blue-500/50";
+              buttonSize = "py-4";
+            } else if (item.id.includes("Business")) {
+              borderClass =
+                "border-4 border-yellow-400 shadow-2xl rounded-3xl business-glow";
+              bgGradient =
+                "bg-gradient-to-br from-yellow-500 via-orange-400 to-red-400";
+              textColor = "text-gray-900";
+              buttonClass =
+                "bg-yellow-500 text-white hover:bg-yellow-600 transition-all rounded-lg";
+              shadowColor = "shadow-yellow-400/50";
+              buttonSize = "py-5";
+            }
 
-          return (
-            <div
-              key={index}
-              className={` bg-white drop-shadow-lg border rounded-lg py-12 px-8 text-gray-700 
-              relative overflow-hidden ${planClass} ${hoverEffect} before:absolute 
-              before:inset-0 before:border-[3px] before:border-transparent 
-              before:animate-rotateBorder`}
-            >
-              <img width={40} src={assets.logo_icon} alt="" />
-              <p className="mt-3 mb-1 font-semibold text-gray-900">{item.id}</p>
-              <p className="text-sm text-gray-600">{item.desc}</p>
-              <p className="mt-6 text-gray-800">
-                <span className="text-3xl font-semibold text-black">
-                  ₹{item.price}
-                </span>{" "}
-                / {item.credits} credits
-              </p>
-
-              {/* Buttons with Modern Styles */}
-              <button onClick={()=>paymentRazorpay(item.id)}
-                className={`w-full mt-8 text-sm rounded-md py-3 min-w-52 font-medium 
-                transition-all duration-300 shadow-md ${buttonClass}`}
+            return (
+              <div
+                ref={(el) => (cardRefs.current[index] = el)}
+                key={index}
+                className={`relative cursor-pointer border py-12 px-10 w-[360px] h-[480px] ${borderClass} ${shadowColor} ${bgGradient}`}
               >
-                {user ? "Purchase" : "Get Started"}
-              </button>
-            </div>
-          );
-        })}
+                <img
+                  width={50}
+                  src={assets.logo_icon}
+                  alt=""
+                  className="mx-auto mb-4"
+                />
+                <p className={`mt-2 mb-3 font-bold text-xl ${textColor}`}>
+                  {item.id}
+                </p>
+                <p className={`text-sm opacity-90 ${textColor}`}>
+                  {item.desc}
+                </p>
+                <p className={`mt-6 text-lg font-medium ${textColor}`}>
+                  <span className="text-3xl font-bold">
+                    ${Math.round(item.price / 83)}
+                  </span>{" "}
+                  <span className="text-md opacity-80">
+                    / {item.credits} credits
+                  </span>
+                </p>
+
+                {!user ? (
+                  <button
+                    onClick={() => setShowLogin(true)}
+                    className={`w-full mt-8 text-sm font-semibold ${buttonSize} 
+                      transition-all duration-300 shadow-md ${buttonClass}`}
+                  >
+                    Get Started
+                  </button>
+                ) : (
+                  <PayPalButtons
+                    style={{
+                      layout: "vertical",
+                      color: "blue",
+                      shape: "rect",
+                      label: "paypal",
+                    }}
+                    createOrder={(data, actions) => {
+                      return actions.order.create({
+                        purchase_units: [
+                          {
+                            amount: {
+                              currency_code: "USD",
+                              value: (item.price / 83).toFixed(2),
+                            },
+                            description: item.id,
+                          },
+                        ],
+                      });
+                    }}
+                    onApprove={(data, actions) => {
+                      return actions.order.capture().then((details) => {
+                        handleOnApprove(details, item.id);
+                      });
+                    }}
+                    onError={(err) => {
+                      toast.error(err.message);
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </PayPalScriptProvider>
   );
 };
 
-export default BuyCredit;  
+export default BuyCredit;
